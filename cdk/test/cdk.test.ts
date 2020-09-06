@@ -1,6 +1,6 @@
 import { expect as expectCDK, matchTemplate, MatchStyle } from '@aws-cdk/assert';
 import * as cdk from '@aws-cdk/core';
-import * as HyperChiralCdk from '../lib/hyper_chiral_cdk-stack';
+import * as HyperChiralCdk from '../lib/cdk/stack';
 
 test('Empty Stack', () => {
     const app = new cdk.App();
