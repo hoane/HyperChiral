@@ -1,7 +1,4 @@
-import {
-	Construct,
-	Stack
-} from '@aws-cdk/core'
+import { Construct } from '@aws-cdk/core'
 import {
 	CfnIdentityPool,
 	CfnIdentityPoolRoleAttachment
@@ -13,11 +10,11 @@ import {
 	Role
 } from '@aws-cdk/aws-iam'
 
-export interface HyperChiralAuthConstructProps {
-	
-}
+export interface HyperChiralAuthConstructProps { }
 
 export class HyperChiralAuthConstruct extends Construct {
+    readonly unauthenticatedRole: Role
+
 	constructor(scope: Construct, id: string, props: HyperChiralAuthConstructProps) {
 		super(scope, id)
 
@@ -25,7 +22,7 @@ export class HyperChiralAuthConstruct extends Construct {
 			allowUnauthenticatedIdentities: true
 		})
 
-		const unauthenticatedRole = new Role(this, 'CognitoUnauthenticatedRole', {
+		this.unauthenticatedRole = new Role(this, 'CognitoUnauthenticatedRole', {
 			assumedBy: new FederatedPrincipal(
 				'cognito-identity.amazonaws.com',
 				{
@@ -34,7 +31,7 @@ export class HyperChiralAuthConstruct extends Construct {
 				},
 				"sts:AssumeRoleWithWebIdentity"),
 		})
-		unauthenticatedRole.addToPolicy(new PolicyStatement({
+		this.unauthenticatedRole.addToPolicy(new PolicyStatement({
 			effect: Effect.ALLOW,
 			actions: [
 				"mobileanalytics:PutEvents",
@@ -46,7 +43,7 @@ export class HyperChiralAuthConstruct extends Construct {
 		const defaultPolicy = new CfnIdentityPoolRoleAttachment(this, 'DefaultValid', {
 			identityPoolId: identityPool.ref,
 			roles: {
-				'unauthenticated': unauthenticatedRole.roleArn
+				'unauthenticated': this.unauthenticatedRole.roleArn
 			}
 		})
 	}

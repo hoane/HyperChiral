@@ -22,9 +22,11 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-appsync": "^1.62.0",
     "@aws-cdk/aws-cloudfront": "^1.62.0",
     "@aws-cdk/aws-cloudfront-origins": "^1.62.0",
     "@aws-cdk/aws-cognito": "^1.62.0",
+    "@aws-cdk/aws-dynamodb": "^1.62.0",
     "@aws-cdk/aws-iam": "^1.62.0",
     "@aws-cdk/aws-s3": "^1.62.0",
     "@aws-cdk/aws-s3-deployment": "^1.62.0",
