@@ -4,22 +4,11 @@ schema {
     subscription: Subscription
 }
 
-input GameInput {
-    name: String!
-}
-input GameInstanceInput {
-    gameId: ID!
-    roomCode: String!
-}
-input PlayerInput {
+type Event {
+    id: ID!
     gameInstanceId: ID!
-    name: String!
-}
-
-type Mutation {
-    addGame(input: GameInput!): Game!
-    addGameInstance(input: GameInstanceInput!): GameInstance!
-    addPlayer(input: PlayerInput!): Player!
+    playerId: ID
+    value: AWSJSON!
 }
 
 type Game {
@@ -27,9 +16,16 @@ type Game {
     name: String!
 }
 
+type GameInstanceState {
+    id: ID!
+    foreignKey: ID
+    value: AWSJSON!
+}
+
 type GameInstance {
     id: ID!
     gameId: ID!
+    roomCode: String!
 }
 
 type Player {
@@ -37,10 +33,38 @@ type Player {
     gameInstanceId: ID!
 }
 
+input GameInput {
+    name: String!
+}
+
+input GameInstanceInput {
+    gameId: ID!
+    roomCode: String!
+}
+
+input PlayerInput {
+    gameInstanceId: ID!
+    name: String!
+}
+
+input EventInput {
+    gameInstanceId: ID!
+    playerId: ID
+    value: AWSJSON!
+}
+
+type Mutation {
+    addGame(input: GameInput!): Game!
+    addGameInstance(input: GameInstanceInput!): GameInstance!
+    addPlayer(input: PlayerInput!): Player!
+    addEvent(input: EventInput!): Event!
+}
+
+
 type Query {
-    getGame(id: ID!): Game
-    getGameInstance(id: ID!): GameInstance
-    getPlayer(id: ID!): Player
+    game(id: ID!): Game
+    gameInstanceByRoomCode(roomCode: String!): GameInstance
+    player(id: ID!): Player
 }
 
 type Subscription {

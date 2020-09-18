@@ -1,0 +1,14 @@
+{
+    "version" : "2018-05-29",
+    "operation" : "Scan",
+    "limit" : 1,
+    "filter" : {
+        "expression": "#roomCode = :roomCode",
+        "expressionNames": {
+            "#roomCode": "roomCode"
+        },
+        "expressionValues": {
+            ":roomCode": $util.dynamodb.toDynamoDBJson($context.arguments.roomCode)
+        }
+    }
+}

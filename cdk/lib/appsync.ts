@@ -10,6 +10,7 @@ import {
 import {
     AttributeType,
     BillingMode,
+    ProjectionType,
     Table,
 } from '@aws-cdk/aws-dynamodb'
 import {
@@ -50,14 +51,14 @@ export class HyperChiralAppSync extends Construct {
 
         gameDS.createResolver({
             typeName: 'Query',
-            fieldName: 'getGame',
+            fieldName: 'game',
             requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
         gameDS.createResolver({
             typeName: 'Mutation',
             fieldName: 'addGame',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting('Game')),
+            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
 
@@ -73,14 +74,14 @@ export class HyperChiralAppSync extends Construct {
 
         gameInstanceDS.createResolver({
             typeName: 'Query',
-            fieldName: 'getGameInstance',
-            requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
-            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+            fieldName: 'gameInstanceByRoomCode',
+            requestMappingTemplate: MappingTemplate.fromFile(__dirname + '/resolvers/gameInstanceByRoomCode.vtl'),
+            responseMappingTemplate: MappingTemplate.fromFile(__dirname + '/resolvers/gameInstanceByRoomCodeResponse.vtl'),
         });
         gameInstanceDS.createResolver({
             typeName: 'Mutation',
             fieldName: 'addGameInstance',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting('GameInstance')),
+            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
 
@@ -95,18 +96,19 @@ export class HyperChiralAppSync extends Construct {
         const playerDS = api.addDynamoDbDataSource('playerDataSource', playerTable)
         playerDS.createResolver({
             typeName: 'Query',
-            fieldName: 'getPlayer',
+            fieldName: 'player',
             requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
         playerDS.createResolver({
             typeName: 'Mutation',
             fieldName: 'addPlayer',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting('Player')),
+            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
 
         api.grantMutation(props.appRole, 'addGameInstance')
         api.grantMutation(props.appRole, 'addPlayer')
+        api.grantQuery(props.appRole, 'gameInstanceByRoomCode')
     }
 }
