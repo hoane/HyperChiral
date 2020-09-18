@@ -9,8 +9,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import {
-  getGameInstanceByRoomCode,
-  getCognitoCredentials
+  ApiClient
 } from "../client/api";
 
 @Component
@@ -19,12 +18,11 @@ export default class Debug extends Vue {
 
   async mounted() {
     try {
-      const creds = await getCognitoCredentials(this.$store.getters.cognitoId);
-      const result = await getGameInstanceByRoomCode({ roomCode: "ABCD" }, creds);
+      const result = await ApiClient.instance.getGameInstanceByRoomCode({ roomCode: "ABCD" });
       this.room = JSON.stringify(result);
     } catch(e) {
       console.error(e);
-      this.room = "error: "+JSON.stringify(e);
+      this.room = "error: " + JSON.stringify(e);
     }
   }
 

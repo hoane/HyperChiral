@@ -1,15 +1,14 @@
-import AWS from "aws-sdk";
+import AWS, { CognitoIdentity, Credentials } from "aws-sdk";
 import aws4 from "aws4";
-import Amplify, { Auth, API, graphqlOperation } from "aws-amplify";
+import Amplify from "aws-amplify";
+import { NormalizedCacheObject } from 'apollo-cache-inmemory';
 import AWSAppSyncClient, { AUTH_TYPE } from "aws-appsync";
+import gql from "graphql-tag";
+import Cookies from "js-cookie";
 import {
   gameInstanceByRoomCode
 } from "../graphql/queries";
-import {
-  GameInstanceByRoomCodeQueryVariables
-} from "../API";
-import https from "https";
-
+import * as API from "../API";
 const region = "us-west-2";
 AWS.config.region = region;
 const apiEndpoint = "vpiil6selzewzmn5fwnf7pfyy4.appsync-api.us-west-2.amazonaws.com";
@@ -20,21 +19,11 @@ const appSyncConfig = {
     "aws_appsync_region": "us-west-2",
     "aws_appsync_authenticationType": "AWS_IAM"
 }
-
 const COGNITO_IDENTITY_POOL_ID =
   "us-west-2:81923733-5747-436e-b266-024dc96b8584";
-const cognito = new AWS.CognitoIdentity();
+const COGNITO_ID_COOKIE = "CognitoId";
 
-export function setCognitoId(id: string) {
-  console.log("settting creds");
-  AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-    IdentityPoolId: COGNITO_IDENTITY_POOL_ID,
-    IdentityId: id
-  });
-  Amplify.configure(appSyncConfig);
-}
-
-export async function getCognitoId(): Promise<string> {
+async function getNewCognitoId(cognito: CognitoIdentity): Promise<string> {
   const response = await cognito
     .getId({ IdentityPoolId: COGNITO_IDENTITY_POOL_ID })
     .promise();
@@ -43,66 +32,81 @@ export async function getCognitoId(): Promise<string> {
   return id;
 }
 
-export async function getCognitoCredentials(id: string) {
+async function getCognitoId(cognito: CognitoIdentity): Promise<string> {
+  const cookie = Cookies.get(COGNITO_ID_COOKIE);
+  if (cookie === undefined) {
+    const id = await getNewCognitoId(cognito);
+    Cookies.set(COGNITO_ID_COOKIE, id, { expired: 1 });
+    return id;
+  } else {
+    return cookie;
+  }
+}
+
+async function getCognitoCredentials(cognito: CognitoIdentity, id: string): Promise<Credentials> {
+  console.log("GETTING CREDS");
   const response = await cognito
     .getCredentialsForIdentity({
       IdentityId: id
     })
     .promise();
-    /*
-  AWS.config.update({
-    credentials: new AWS.Credentials(
-      response?.Credentials?.AccessKeyId ?? "",
-      response?.Credentials?.SecretAccessKey ?? "",
-      response?.Credentials?.SessionToken ?? ""
-    )
-  });
-  */
-  return response.Credentials;
+  if (response.Credentials === undefined) throw new Error("No Creds");
+  return new Credentials(
+    response.Credentials.AccessKeyId ?? "",
+    response.Credentials.SecretKey ?? "",
+    response.Credentials.SessionToken ?? ""
+  )
 }
 
-export async function gQuery(query: string, name: string, item: any, creds: any) {
-  const body = JSON.stringify({
-    query: query,
-    variables: item
-  });
-  console.log(body);
-
-  const opts = {
-    host: apiEndpoint,
-    path: apiPath,
+async function getAppSyncClient(cognito: CognitoIdentity, id: string) {
+  const client = new AWSAppSyncClient({
+    url: appSyncConfig.aws_appsync_graphqlEndpoint,
     region: "us-west-2",
-    service: "appsync",
-    signQuery: true,
-    headers: {
-      "Host": apiEndpoint,
-      "Content-Type": "application/json"
-    },
-    body: body
-  };
-
-  console.log("send request");
-  const data = await new Promise((res, rej) => {
-    const httpRequest = https.request(
-      aws4.sign(opts, {
-        accessKeyId: creds.AccessKeyId,
-        secretAccessKey: creds.SecretKey,
-        sessionToken: creds.SessionToken 
-      }),
-      (result) => {
-        result.on('data', (data) => {
-          res(JSON.parse(data.toString()));
-        });
-      }
-    );
-    httpRequest.write(opts.body);
-    httpRequest.end();
+    auth: {
+      type: AUTH_TYPE.AWS_IAM,
+      credentials: () => getCognitoCredentials(cognito, id)
+    }
   });
-  console.log(data);
 
-  return data;
+  return await client.hydrated();
 }
 
-export async function getGameInstanceByRoomCode(input: GameInstanceByRoomCodeQueryVariables, creds: any) {
-  return await gQuery(gameInstanceByRoomCode, "queries/gameInstanceByRoomCode", input, creds);
+export class ApiClient {
+  static _instance: ApiClient | null = null
+
+  static get instance(): ApiClient {
+    if (ApiClient._instance === null) throw new Error("initialization error");
+    return ApiClient._instance;
+  }
+
+  appsync: AWSAppSyncClient<NormalizedCacheObject>
+  cognito: CognitoIdentity
+  cognitoId: string
+
+  constructor(appsync: AWSAppSyncClient<NormalizedCacheObject>, cognito: CognitoIdentity, cognitoId: string) {
+    this.appsync = appsync;
+    this.cognito = cognito;
+    this.cognitoId = cognitoId;
+  }
+
+  async gQuery(query: string, item: any): Promise<any> {
+    const data = await this.appsync.query({
+      query: gql(query),
+      variables: item
+    })
+
+    return data.data;
+  }
+
+  async getGameInstanceByRoomCode(input: API.GameInstanceByRoomCodeQueryVariables): Promise<API.GameInstanceByRoomCodeQuery> {
+    return await this.gQuery(gameInstanceByRoomCode, input);
+  }
 }
+
+export async function initialize() {
+  const cognito = new CognitoIdentity();
+  const cognitoId = await getCognitoId(cognito);
+  const appsync = await getAppSyncClient(cognito, cognitoId);
+  ApiClient._instance = new ApiClient(appsync, cognito, cognitoId);
+}
+
