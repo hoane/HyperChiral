@@ -2,28 +2,19 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const game = /* GraphQL */ `
-  query Game($id: ID!) {
-    game(id: $id) {
-      id
-      name
-    }
-  }
-`;
-export const gameInstanceByRoomCode = /* GraphQL */ `
-  query GameInstanceByRoomCode($roomCode: String!) {
-    gameInstanceByRoomCode(roomCode: $roomCode) {
-      id
-      gameId
+export const gameRoom = /* GraphQL */ `
+  query GameRoom($roomCode: String!) {
+    gameRoom(roomCode: $roomCode) {
       roomCode
+      gameInstanceId
     }
   }
 `;
-export const player = /* GraphQL */ `
-  query Player($id: ID!) {
-    player(id: $id) {
+export const gameInstance = /* GraphQL */ `
+  query GameInstance($id: ID!) {
+    gameInstance(id: $id) {
       id
-      gameInstanceId
+      roomCode
     }
   }
 `;

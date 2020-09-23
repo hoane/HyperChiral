@@ -1,73 +1,23 @@
 schema {
     query: Query
     mutation: Mutation
-    subscription: Subscription
 }
 
-type Event {
-    id: ID!
-    gameInstanceId: ID!
-    playerId: ID
-    value: AWSJSON!
-}
-
-type Game {
-    id: ID!
-    name: String!
-}
-
-type GameInstanceState {
-    id: ID!
-    foreignKey: ID
-    value: AWSJSON!
+type GameRoom {
+    roomCode: String!
+    gameInstanceId: String
 }
 
 type GameInstance {
     id: ID!
-    gameId: ID!
     roomCode: String!
-}
-
-type Player {
-    id: ID!
-    gameInstanceId: ID!
-}
-
-input GameInput {
-    name: String!
-}
-
-input GameInstanceInput {
-    gameId: ID!
-    roomCode: String!
-}
-
-input PlayerInput {
-    gameInstanceId: ID!
-    name: String!
-}
-
-input EventInput {
-    gameInstanceId: ID!
-    playerId: ID
-    value: AWSJSON!
 }
 
 type Mutation {
-    addGame(input: GameInput!): Game!
-    addGameInstance(input: GameInstanceInput!): GameInstance!
-    addPlayer(input: PlayerInput!): Player!
-    addEvent(input: EventInput!): Event!
+    startGame: GameRoom!
 }
-
 
 type Query {
-    game(id: ID!): Game
-    gameInstanceByRoomCode(roomCode: String!): GameInstance
-    player(id: ID!): Player
-}
-
-type Subscription {
-    newPlayer: Player
-    @aws_subscribe(mutations:["addPlayer"])
+    gameRoom(roomCode: String!): GameRoom
+    gameInstance(id: ID!): GameInstance
 }

@@ -27,3 +27,8 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Amplify Codegen
+```
+amplify add codegen --apiId fj3yjosphvblvjb7nmx2ov5znm
+```

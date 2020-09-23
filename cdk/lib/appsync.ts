@@ -8,21 +8,19 @@ import {
     Values
 } from '@aws-cdk/aws-appsync'
 import {
-    AttributeType,
-    BillingMode,
-    ProjectionType,
-    Table,
-} from '@aws-cdk/aws-dynamodb'
-import {
 	Role
 } from '@aws-cdk/aws-iam'
 import {
 	Construct,
     RemovalPolicy
 } from '@aws-cdk/core'
+import { HyperChiralDatabase } from "./database";
+import { HyperChiralApiService } from "./apiService";
 
 export interface HyperChiralAppSyncProps {
     appRole: Role
+    apiService: HyperChiralApiService
+    database: HyperChiralDatabase
 }
 
 export class HyperChiralAppSync extends Construct {
@@ -39,76 +37,30 @@ export class HyperChiralAppSync extends Construct {
             }
         })
 
-        const gameTable = new Table(this, 'GameTable', {
-            partitionKey: {
-                name: 'id',
-                type: AttributeType.STRING
-            },
-            removalPolicy: RemovalPolicy.DESTROY,
-            billingMode: BillingMode.PAY_PER_REQUEST
-        })
-        const gameDS = api.addDynamoDbDataSource('gameDataSource', gameTable)
-
-        gameDS.createResolver({
+        const gameRoomDS = api.addDynamoDbDataSource('GameRoomDataSource', props.database.gameRoomTable)
+        gameRoomDS.createResolver({
             typeName: 'Query',
-            fieldName: 'game',
+            fieldName: 'gameRoom',
+            requestMappingTemplate: MappingTemplate.dynamoDbGetItem('roomCode', 'roomCode'),
+            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
+        });
+
+        const gameInstanceDS = api.addDynamoDbDataSource('GameInstanceDataSource', props.database.gameInstanceTable)
+        gameInstanceDS.createResolver({
+            typeName: 'Query',
+            fieldName: 'gameInstance',
             requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
-        gameDS.createResolver({
-            typeName: 'Mutation',
-            fieldName: 'addGame',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
-            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-        });
 
-        const gameInstanceTable = new Table(this, 'GameInstanceTable', {
-            partitionKey: {
-                name: 'id',
-                type: AttributeType.STRING
-            },
-            removalPolicy: RemovalPolicy.DESTROY,
-            billingMode: BillingMode.PAY_PER_REQUEST
+        const apiServiceDS = api.addLambdaDataSource('ApiServiceDataSource', props.apiService.lambda)
+        apiServiceDS.createResolver({
+            typeName: 'Mutation',
+            fieldName: 'startGame'
         })
-        const gameInstanceDS = api.addDynamoDbDataSource('gameInstanceDataSource', gameInstanceTable)
 
-        gameInstanceDS.createResolver({
-            typeName: 'Query',
-            fieldName: 'gameInstanceByRoomCode',
-            requestMappingTemplate: MappingTemplate.fromFile(__dirname + '/resolvers/gameInstanceByRoomCode.vtl'),
-            responseMappingTemplate: MappingTemplate.fromFile(__dirname + '/resolvers/gameInstanceByRoomCodeResponse.vtl'),
-        });
-        gameInstanceDS.createResolver({
-            typeName: 'Mutation',
-            fieldName: 'addGameInstance',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
-            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-        });
-
-        const playerTable = new Table(this, 'PlayerTable', {
-            partitionKey: {
-                name: 'id',
-                type: AttributeType.STRING
-            },
-            removalPolicy: RemovalPolicy.DESTROY,
-            billingMode: BillingMode.PAY_PER_REQUEST
-        })
-        const playerDS = api.addDynamoDbDataSource('playerDataSource', playerTable)
-        playerDS.createResolver({
-            typeName: 'Query',
-            fieldName: 'player',
-            requestMappingTemplate: MappingTemplate.dynamoDbGetItem('id', 'id'),
-            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-        });
-        playerDS.createResolver({
-            typeName: 'Mutation',
-            fieldName: 'addPlayer',
-            requestMappingTemplate: MappingTemplate.dynamoDbPutItem(PrimaryKey.partition('id').auto(), Values.projecting()),
-            responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
-        });
-
-        api.grantMutation(props.appRole, 'addGameInstance')
-        api.grantMutation(props.appRole, 'addPlayer')
-        api.grantQuery(props.appRole, 'gameInstanceByRoomCode')
+        api.grantMutation(props.appRole, 'startGame')
+        api.grantQuery(props.appRole, 'gameRoom')
+        api.grantQuery(props.appRole, 'gameInstance')
     }
 }
