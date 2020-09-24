@@ -1,10 +1,9 @@
 import AWS, { CognitoIdentity, Credentials } from 'aws-sdk'
 import { NormalizedCacheObject } from 'apollo-cache-inmemory'
 import AWSAppSyncClient, { AUTH_TYPE } from 'aws-appsync'
-import gql from 'graphql-tag'
 import Cookies from 'js-cookie'
-import * as Queries from '@/graphql/queries'
-import * as API from '../API'
+import * as Model from 'hyper-chiral-model'
+import { DocumentNode } from "apollo-link";
 const region = 'us-west-2'
 AWS.config.region = region
 const GRAPHQL_ENDPOINT =
@@ -87,9 +86,9 @@ export class ApiClient {
         this.cognitoId = cognitoId
     }
 
-    async gQuery(query: string, item: any): Promise<any> {
+    async gQuery(query: DocumentNode, item: any): Promise<any> {
         const data = await this.appsync.query({
-            query: gql(query),
+            query: query,
             variables: item
         })
 
@@ -97,9 +96,9 @@ export class ApiClient {
     }
 
     async gameRoom(
-        input: API.GameRoomQueryVariables
-    ): Promise<API.GameRoomQuery> {
-        return await this.gQuery(Queries.gameRoom, input)
+        input: Model.GameRoomQueryVariables
+    ): Promise<Model.GameRoomQuery> {
+        return await this.gQuery(Model.GameRoomDocument, input)
     }
 }
 

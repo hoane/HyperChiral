@@ -1,0 +1,6 @@
+query GameRoom($roomCode: String!) {
+    gameRoom(roomCode: $roomCode) {
+        roomCode
+        gameInstanceId
+    }
+}

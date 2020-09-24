@@ -8,7 +8,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { ApiClient } from '../client/api'
+import { ApiClient } from '@/client/api'
 
 @Component
 export default class Debug extends Vue {
@@ -17,7 +17,7 @@ export default class Debug extends Vue {
     async mounted() {
         try {
             const result = await ApiClient.instance.gameRoom({
-                roomCode: 'ABCD'
+                roomCode: 'TEST'
             })
             this.room = JSON.stringify(result)
         } catch (e) {

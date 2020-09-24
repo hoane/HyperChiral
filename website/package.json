@@ -25,7 +25,9 @@
     "bootstrap-vue": "^2.16.0",
     "core-js": "^3.6.5",
     "graphql": "^0.11.7",
+    "graphql-request": "^3.1.0",
     "graphql-tag": "^2.5.0",
+    "hyper-chiral-model": "file:../model",
     "isomorphic-fetch": "^2.2.1",
     "js-cookie": "^2.2.1",
     "vue": "^2.6.11",
@@ -65,5 +67,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }

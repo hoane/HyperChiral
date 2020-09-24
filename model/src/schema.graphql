@@ -1,0 +1,23 @@
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type GameRoom {
+    roomCode: String!
+    gameInstanceId: String
+}
+
+type GameInstance {
+    id: ID!
+    roomCode: String!
+}
+
+type Mutation {
+    startGame: GameRoom!
+}
+
+type Query {
+    gameRoom(roomCode: String!): GameRoom
+    gameInstance(id: ID!): GameInstance
+}

@@ -14,13 +14,16 @@ import {
 	Construct,
     RemovalPolicy
 } from '@aws-cdk/core'
-import { HyperChiralDatabase } from "./database";
-import { HyperChiralApiService } from "./apiService";
+import { IFunction } from "@aws-cdk/aws-lambda"
+import { ITable } from "@aws-cdk/aws-dynamodb";
 
 export interface HyperChiralAppSyncProps {
     appRole: Role
-    apiService: HyperChiralApiService
-    database: HyperChiralDatabase
+    apiServiceLambda: IFunction
+    tables: {
+        gameRoom: ITable,
+        gameInstance: ITable
+    }
 }
 
 export class HyperChiralAppSync extends Construct {
@@ -37,7 +40,7 @@ export class HyperChiralAppSync extends Construct {
             }
         })
 
-        const gameRoomDS = api.addDynamoDbDataSource('GameRoomDataSource', props.database.gameRoomTable)
+        const gameRoomDS = api.addDynamoDbDataSource('GameRoomDataSource', props.tables.gameRoom)
         gameRoomDS.createResolver({
             typeName: 'Query',
             fieldName: 'gameRoom',
@@ -45,7 +48,7 @@ export class HyperChiralAppSync extends Construct {
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
 
-        const gameInstanceDS = api.addDynamoDbDataSource('GameInstanceDataSource', props.database.gameInstanceTable)
+        const gameInstanceDS = api.addDynamoDbDataSource('GameInstanceDataSource', props.tables.gameInstance)
         gameInstanceDS.createResolver({
             typeName: 'Query',
             fieldName: 'gameInstance',
@@ -53,7 +56,7 @@ export class HyperChiralAppSync extends Construct {
             responseMappingTemplate: MappingTemplate.dynamoDbResultItem(),
         });
 
-        const apiServiceDS = api.addLambdaDataSource('ApiServiceDataSource', props.apiService.lambda)
+        const apiServiceDS = api.addLambdaDataSource('ApiServiceDataSource', props.apiServiceLambda)
         apiServiceDS.createResolver({
             typeName: 'Mutation',
             fieldName: 'startGame'

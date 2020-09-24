@@ -1,0 +1,6 @@
+query GameInstance($id: ID!) {
+    gameInstance(id: $id) {
+        id
+        roomCode
+    }
+}
