@@ -1,0 +1,25 @@
+{
+  "name": "hyper-chiral-client",
+  "version": "0.1.0",
+  "description": "Client for Hyper Chiral API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "author": "Brandon Hoane",
+  "license": "MIT",
+  "keywords": [],
+  "dependencies": {
+    "hyper-chiral-model": "file:../model",
+    "aws-appsync": "^4.0.1",
+    "aws-sdk": "^2.748.0",
+    "graphql": "^0.11.7",
+    "graphql-request": "^3.1.0",
+    "graphql-tag": "^2.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.3"
+  }
+}

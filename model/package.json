@@ -4,10 +4,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "npm run release",
     "test": "echo \"Error: no test specified\" && exit 1",
     "codegen": "graphql-codegen --config codegen.yml",
     "build": "tsc",
+    "clean": "rm -rf dist && rm -rf src/generated",
     "release": "npm run codegen && npm run build"
   },
   "author": "Brandon Hoane",
@@ -16,6 +16,7 @@
   "devDependencies": {
     "@graphql-codegen/cli": "1.17.8",
     "@graphql-codegen/introspection": "1.17.8",
+    "@graphql-codegen/typescript": "^1.17.9",
     "@graphql-codegen/typescript-graphql-request": "^2.0.0",
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@graphql-codegen/typescript-resolvers": "1.17.8",

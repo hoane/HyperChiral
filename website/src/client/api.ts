@@ -3,7 +3,8 @@ import { NormalizedCacheObject } from 'apollo-cache-inmemory'
 import AWSAppSyncClient, { AUTH_TYPE } from 'aws-appsync'
 import Cookies from 'js-cookie'
 import * as Model from 'hyper-chiral-model'
-import { DocumentNode } from "apollo-link";
+import { ApiClient } from 'hyper-chiral-client'
+import { DocumentNode } from "apollo-link"
 const region = 'us-west-2'
 AWS.config.region = region
 const GRAPHQL_ENDPOINT =
@@ -63,13 +64,13 @@ async function getAppSyncClient(cognito: CognitoIdentity, id: string) {
     return await client.hydrated()
 }
 
-export class ApiClient {
+export class ApiHelper {
     static _instance: ApiClient | null = null
 
     static get instance(): ApiClient {
-        if (ApiClient._instance === null)
+        if (ApiHelper._instance === null)
             throw new Error('initialization error')
-        return ApiClient._instance
+        return ApiHelper._instance
     }
 
     appsync: AWSAppSyncClient<NormalizedCacheObject>
@@ -100,11 +101,23 @@ export class ApiClient {
     ): Promise<Model.GameRoomQuery> {
         return await this.gQuery(Model.GameRoomDocument, input)
     }
+
+    async gameInstance(
+        input: Model.GameInstanceQueryVariables
+    ): Promise<Model.GameInstanceQuery> {
+        return await this.gQuery(Model.GameInstanceDocument, input)
+    }
+
+    async startGame(
+        input: Model.StartGameMutationVariables
+    ): Promise<Model.StartGameMutation> {
+        return await this.gQuery(Model.StartGameDocument, input)
+    }
 }
 
 export async function initialize() {
     const cognito = new CognitoIdentity()
     const cognitoId = await getCognitoId(cognito)
     const appsync = await getAppSyncClient(cognito, cognitoId)
-    ApiClient._instance = new ApiClient(appsync, cognito, cognitoId)
+    ApiHelper._instance = new ApiClient(appsync, cognito, cognitoId)
 }
