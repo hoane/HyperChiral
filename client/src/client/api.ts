@@ -20,30 +20,37 @@ export class ApiClient {
         this.cognitoId = cognitoId
     }
 
-    async gQuery(query: DocumentNode, item: any): Promise<any> {
+    async query(query: DocumentNode, item: any): Promise<any> {
         const data = await this.appsync.query({
             query: query,
             variables: item
         })
+        return data.data
+    }
 
+    async mutate(mutation: DocumentNode, item: any): Promise<any> {
+        const data = await this.appsync.mutate({
+            mutation: mutation,
+            variables: item
+        })
         return data.data
     }
 
     async gameRoom(
         input: Model.GameRoomQueryVariables
     ): Promise<Model.GameRoomQuery> {
-        return await this.gQuery(Model.GameRoomDocument, input)
+        return await this.query(Model.GameRoomDocument, input)
     }
 
     async gameInstance(
         input: Model.GameInstanceQueryVariables
     ): Promise<Model.GameInstanceQuery> {
-        return await this.gQuery(Model.GameInstanceDocument, input)
+        return await this.query(Model.GameInstanceDocument, input)
     }
 
     async startGame(
         input: Model.StartGameMutationVariables
     ): Promise<Model.StartGameMutation> {
-        return await this.gQuery(Model.StartGameDocument, input)
+        return await this.mutate(Model.StartGameDocument, input)
     }
 }
